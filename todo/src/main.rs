@@ -1,11 +1,5 @@
 use std::env;
-use std::fs;
-
-// struct Item {
-//     id: i32,
-//     completed: bool,
-//     task: String,
-// }
+use std::fs::read_to_string;
 
 fn help_menu() {
     println!("Command: todo [option] [others]....\n");
@@ -29,7 +23,7 @@ fn load_config(user_relative_path: &str) -> Result<(std::ffi::OsString, String)>
     let config_content = if let Ok(content) = std::fs::read(&config_path) {
         String::from_utf8_lossy(&content).to_string()
     } else {
-        "This is the default content\n".to_owned()
+        "".to_owned()
     };
     Ok((config_path.into_os_string(), config_content))
 }
@@ -42,6 +36,8 @@ fn save_config(config_path: &std::ffi::OsStr, config_content: &str) -> Result<()
     std::fs::write(&config_path, config_content)?;
     Ok(())
 }
+
+fn add_item(content: &str, config_content: &str, config_path: &std::ffi::OsStr) {}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -57,15 +53,30 @@ fn main() {
         help_menu();
         return;
     } else if args[1] == "add" {
-        println!("Add TODO LIST Item");
+        let id = config_content.lines().count();
+        config_content += &format!("{}, {}, 0\n", id, args[2]);
+        save_config(&config_path, &config_content);
     } else if args[1] == "complete" {
-        println!("Mark ID as Completed");
+        // mark_completed(&args[2], &config_content);
     } else if args[1] == "list" {
-        println!("List all the todo iteams");
-    } else if args[1] == "list-completed" {
-        println!("List all the completed Item");
-    } else if args[1] == "delete" {
-        println!("Remove todo item based on the id");
+        println!(" Status  ID   Task ");
+        for line in read_to_string(config_path).unwrap().lines() {
+            let chunks: Vec<String> = line
+                .to_string()
+                .split(",")
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>();
+            if chunks[2] == " 0" {
+                print!("   -    ");
+            } else {
+                print!("   x    ");
+            }
+            println!("  {}  {}", chunks[0], chunks[1]);
+        }
+        // } else if args[1] == "list-completed" {
+        //     list_down_completed(&config_content);
+        // } else if args[1] == "delete" {
+        //     delete_item(&args[2], &config_content);
     }
 
     // let bar: Vec<List> = Vec::new();
